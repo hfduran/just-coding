@@ -1,7 +1,16 @@
-mod front_of_house;
+mod pricer;
+mod strategies;
 
-use crate::front_of_house::hosting;
+use crate::{strategies::discount_strategy::{
+    default_discount_strategy, poli_student_discount_strategy,
+}, pricer::PriceContext};
 
 fn main() {
-    hosting::add_to_waitlist();
+    let price = 10.0;
+
+    let pricer = PriceContext::new(default_discount_strategy);
+    println!("{}", pricer.calculate_price(&price));
+
+    let pricer = PriceContext::new(poli_student_discount_strategy);
+    println!("{}", pricer.calculate_price(&price));
 }
