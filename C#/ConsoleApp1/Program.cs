@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace HelloWorld
 {
     public static class Extensions
@@ -79,8 +78,8 @@ namespace HelloWorld
             //     yield return 2;
             //     yield return 3;
             // }
-            // // you can also use "yield break" to stop the Iterator
             // // this method would only return half of the values from 0 to limit.
+            // // you can also use "yield break" to stop the Iterator
             // static IEnumerable<int> YieldCounterWithBreak(int limit = 10)
             // {
             //     for (var i = 0; i < limit; i++)
@@ -101,7 +100,25 @@ namespace HelloWorld
             // int? nullable = null;
             // int notNullable = nullable ?? 0;
             // Console.WriteLine(notNullable);
-            
+
+            // using (StreamWriter writer = new StreamWriter("log.txt"))
+            // {
+            //     writer.WriteLine("Hello World");
+            // }
+
+            // IQUERIABLE:
+            var bikes = new List<Bicycle>();
+            bikes.Sort();
+            bikes.Sort((b1, b2) => b1.Cadence.CompareTo(b2.Cadence));
+            var result = bikes.Where(b => b.Cadence > 10)
+                .OrderBy(b => b.Cadence)
+                .Select(b => b.Cadence);
+            var totalWheels = bikes.Sum(b => b.Wheels);
+            var bikeSummaries = bikes.Select(b => new
+            {
+                Name = b.Name,
+                IsAwesome = !b.IsBroken && b.HasTassles
+            });
         }
     }
 }
