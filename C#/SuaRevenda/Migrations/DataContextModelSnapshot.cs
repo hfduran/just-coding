@@ -180,6 +180,16 @@ namespace SuaRevenda.Migrations
                     b.HasDiscriminator().HasValue("Consigned");
                 });
 
+            modelBuilder.Entity("SuaRevenda.Models.Purchase", b =>
+                {
+                    b.HasBaseType("SuaRevenda.Models.Origin");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double precision");
+
+                    b.HasDiscriminator().HasValue("Purchase");
+                });
+
             modelBuilder.Entity("SuaRevenda.Models.PieceSold", b =>
                 {
                     b.HasBaseType("SuaRevenda.Models.Piece");

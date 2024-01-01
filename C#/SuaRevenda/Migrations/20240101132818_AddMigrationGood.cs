@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SuaRevenda.Migrations
 {
     /// <inheritdoc />
-    public partial class UsersRelations : Migration
+    public partial class AddMigrationGood : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,8 @@ namespace SuaRevenda.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Discriminator = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false)
+                    Discriminator = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
+                    Price = table.Column<double>(type: "double precision", nullable: true)
                 },
                 constraints: table =>
                 {

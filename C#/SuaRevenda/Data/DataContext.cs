@@ -19,6 +19,8 @@ public class DataContext : DbContext
     }
 
     public DbSet<Piece> Pieces { get; set; } = null!;
+    public DbSet<Purchase> Purchases { get; set; } = null!;
+    public DbSet<Consigned> Consigneds { get; set; } = null!;
     public DbSet<Origin> Origins { get; set; } = null!;
     public DbSet<Supplier> Suppliers { get; set; } = null!;
     public DbSet<CommissionTable> CommissionTables { get; set; } = null!;

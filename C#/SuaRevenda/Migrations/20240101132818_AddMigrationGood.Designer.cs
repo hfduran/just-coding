@@ -12,8 +12,8 @@ using SuaRevenda.Data;
 namespace SuaRevenda.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20231231180811_UsersRelations")]
-    partial class UsersRelations
+    [Migration("20240101132818_AddMigrationGood")]
+    partial class AddMigrationGood
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -181,6 +181,16 @@ namespace SuaRevenda.Migrations
                     b.HasBaseType("SuaRevenda.Models.Origin");
 
                     b.HasDiscriminator().HasValue("Consigned");
+                });
+
+            modelBuilder.Entity("SuaRevenda.Models.Purchase", b =>
+                {
+                    b.HasBaseType("SuaRevenda.Models.Origin");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double precision");
+
+                    b.HasDiscriminator().HasValue("Purchase");
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.PieceSold", b =>
