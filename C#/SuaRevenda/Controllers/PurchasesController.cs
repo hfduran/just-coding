@@ -44,59 +44,67 @@ namespace SuaRevenda.Controllers
         }
 
         // GET: api/Purchases/5
-        // [HttpGet("{id}")]
-        // public async Task<ActionResult<Purchase>> GetPurchase(long id)
-        // {
-        //     var purchase = await _context.Purchases.FindAsync(id);
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PurchaseSpecification>> GetPurchase(long id)
+        {
+            var purchase = await _context.Purchases.FindAsync(id);
 
-        //     if (purchase == null)
-        //     {
-        //         return NotFound();
-        //     }
+            if (purchase == null)
+            {
+                return NotFound();
+            }
 
-        //     return purchase;
-        // }
+            return new PurchaseSpecification
+            {
+                Id = purchase.Id,
+                Price = purchase.Price,
+                Date = purchase.Date,
+                Pieces = purchase.Pieces.Select(p => new PieceSpecification
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Type = p.Type,
+                    UserId = p.UserId
+                }).ToArray()
+            };
+        }
 
         // PUT: api/Purchases/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        // [HttpPut("{id}")]
-        // public async Task<IActionResult> PutPurchase(long id, Purchase purchase)
-        // {
-        //     if (id != purchase.Id)
-        //     {
-        //         return BadRequest();
-        //     }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutPurchase(long id, PurchaseSpecification purchase)
+        {
+            if (id != purchase.Id)
+            {
+                return BadRequest();
+            }
 
-        //     _context.Entry(purchase).State = EntityState.Modified;
+            var purchaseToUpdate = await _context.Purchases.FindAsync(id);
+            if (purchaseToUpdate == null)
+            {
+                return NotFound();
+            }
 
-        //     try
-        //     {
-        //         await _context.SaveChangesAsync();
-        //     }
-        //     catch (DbUpdateConcurrencyException)
-        //     {
-        //         if (!PurchaseExists(id))
-        //         {
-        //             return NotFound();
-        //         }
-        //         else
-        //         {
-        //             throw;
-        //         }
-        //     }
+            purchaseToUpdate.Price = purchase.Price;
+            purchaseToUpdate.Date = purchase.Date;
 
-        //     return NoContent();
-        // }
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+                return Conflict();
+            }
+
+            return NoContent();
+        }
 
         // POST: api/Purchases
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<PurchaseSpecification>> PostPurchase(PurchaseSpecification purchase)
         {
-            // _context.Purchases.Add(purchase);
-            // await _context.SaveChangesAsync();
-
-            // return CreatedAtAction("GetPurchase", new { id = purchase.Id }, purchase);
             var purchaseToCreate = new Purchase
             {
                 Price = purchase.Price,
@@ -120,26 +128,26 @@ namespace SuaRevenda.Controllers
 
             return CreatedAtAction("GetPurchase", new { id = purchaseToCreate.Id }, purchase);
         }
+
+        // DELETE: api/Purchases/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePurchase(long id)
+        {
+            var purchase = await _context.Purchases.FindAsync(id);
+            if (purchase == null)
+            {
+                return NotFound();
+            }
+
+            _context.Purchases.Remove(purchase);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool PurchaseExists(long id)
+        {
+            return _context.Purchases.Any(e => e.Id == id);
+        }
     }
-
-    // DELETE: api/Purchases/5
-    // [HttpDelete("{id}")]
-    // public async Task<IActionResult> DeletePurchase(long id)
-    // {
-    //     var purchase = await _context.Purchases.FindAsync(id);
-    //     if (purchase == null)
-    //     {
-    //         return NotFound();
-    //     }
-
-    //     _context.Purchases.Remove(purchase);
-    //     await _context.SaveChangesAsync();
-
-    //     return NoContent();
-    // }
-
-    // private bool PurchaseExists(long id)
-    // {
-    //     return _context.Purchases.Any(e => e.Id == id);
-    // }
 }
