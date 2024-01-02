@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SuaRevenda.Data;
 using SuaRevenda.Models;
+using SuaRevenda.ResourceModels;
 
 namespace SuaRevenda.Controllers
 {
@@ -23,14 +24,22 @@ namespace SuaRevenda.Controllers
 
         // GET: api/Pieces
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Piece>>> GetPieces()
+        public async Task<ActionResult<IEnumerable<PieceSpecification>>> GetPieces()
         {
-            return await _context.Pieces.ToListAsync();
+            var pieces = _context.Pieces
+                .Select(p => new PieceSpecification
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Type = p.Type,
+                    UserId = p.UserId
+                });
+            return await pieces.ToListAsync();
         }
 
         // GET: api/Pieces/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Piece>> GetPiece(long id)
+        public async Task<ActionResult<PieceSpecification>> GetPiece(long id)
         {
             var piece = await _context.Pieces.FindAsync(id);
 
@@ -39,49 +48,32 @@ namespace SuaRevenda.Controllers
                 return NotFound();
             }
 
-            return piece;
+            return new PieceSpecification
+            {
+                Id = piece.Id,
+                Name = piece.Name,
+                Type = piece.Type,
+                UserId = piece.UserId
+            };
         }
 
         // PUT: api/Pieces/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPiece(long id, Piece piece)
+        public async Task<IActionResult> PutPiece(long id, PieceSpecification piece)
         {
-            if (id != piece.Id)
+            var pieceToUpdate = await _context.Pieces.FindAsync(id);
+
+            if (pieceToUpdate == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(piece).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PieceExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Pieces
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Piece>> PostPiece(Piece piece)
-        {
-            _context.Pieces.Add(piece);
+            pieceToUpdate.Name = piece.Name;
+            pieceToUpdate.Type = piece.Type;
+            _context.Entry(pieceToUpdate).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPiece", new { id = piece.Id }, piece);
+            return NoContent();
         }
 
         // DELETE: api/Pieces/5

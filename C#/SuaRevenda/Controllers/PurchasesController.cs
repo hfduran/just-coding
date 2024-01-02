@@ -24,7 +24,7 @@ namespace SuaRevenda.Controllers
 
         // GET: api/Purchases
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PurchaseSpecification>>> GetPurchase()
+        public async Task<ActionResult<IEnumerable<PurchaseSpecification>>> GetPurchase([FromHeader] long userId)
         {
             var purchases = _context.Purchases
                 .Select(p => new PurchaseSpecification
@@ -45,7 +45,7 @@ namespace SuaRevenda.Controllers
 
         // GET: api/Purchases/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PurchaseSpecification>> GetPurchase(long id)
+        public async Task<ActionResult<PurchaseSpecification>> GetPurchase([FromHeader] long userId, long id)
         {
             var purchase = await _context.Purchases.FindAsync(id);
 
