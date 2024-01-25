@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SuaRevenda.ResourceModels;
 using SuaRevenda.Models;
 using SuaRevenda.Data;
@@ -11,6 +12,14 @@ public class PieceAlreadySoldException : Exception
     { }
 }
 
+public class NoSuchSaleException : Exception
+{
+    public NoSuchSaleException(long id) : base(
+        $"Sale of id = '{id}' does not exist"
+    )
+    { }
+}
+
 public class SalesServices
 {
     private readonly DataContext _context;
@@ -18,6 +27,25 @@ public class SalesServices
     public SalesServices(DataContext context)
     {
         _context = context;
+    }
+
+    public async Task<IEnumerable<Sale>> GetSales()
+    {
+        var sales = await _context.Sales
+            .Include(s => s.Pieces)
+            .ToListAsync();
+
+        return sales;
+    }
+
+    public async Task<Sale> GetSale(long id)
+    {
+        var sale = await _context.Sales.FindAsync(id);
+        if (sale == null)
+        {
+            throw new NoSuchSaleException(id);
+        }
+        return sale;
     }
 
     public async Task<Sale> SellPieces(CreateSaleSpecification sale, List<Piece> pieces)

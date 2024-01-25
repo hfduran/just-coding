@@ -23,55 +23,29 @@ public class SalesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SaleSpecification>>> GetSales()
     {
-        var sales = _context.Sales.Select(
-            s =>
-                new SaleSpecification
-                {
-                    Id = s.Id,
-                    Price = s.Price,
-                    Date = s.Date,
-                    PiecesSold = s.Pieces.Select(
-                        p =>
-                            new PieceSpecification
-                            {
-                                Id = p.Id,
-                                Name = p.Name,
-                                Type = p.Type,
-                                UserId = p.UserId
-                            }
-                    )
-                        .ToArray()
-                }
-        );
-
-        return await sales.ToListAsync();
+        var sales = await _salesServices.GetSales();
+        return SalesToSaleSpecifications(sales).ToList();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<SaleSpecification>> GetSale(long id)
     {
-        var sale = await _context.Sales.FindAsync(id);
-        if (sale == null)
+        try
         {
-            return NotFound();
+            var sale = await TryGetSale(id);
+            return sale;
         }
-        return new SaleSpecification
+        catch (NoSuchSaleException e)
         {
-            Id = sale.Id,
-            Price = sale.Price,
-            Date = sale.Date,
-            PiecesSold = sale.Pieces.Select(
-                p =>
-                    new PieceSpecification
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Type = p.Type,
-                        UserId = p.UserId
-                    }
-            )
-                .ToArray()
-        };
+            return NotFound(e.Message);
+        }
+    }
+
+    private async Task<ActionResult<SaleSpecification>> TryGetSale(long id)
+    {
+        var sale = await _salesServices.GetSale(id);
+        SaleSpecification spec = SaleToSaleSpecification(sale);
+        return spec;
     }
 
     [HttpPut("{id}")]
@@ -114,7 +88,7 @@ public class SalesController : ControllerBase
 
         try
         {
-            return await TryToSellPieces(sale, pieces);
+            return await TryCreateSale(sale, pieces);
         }
         catch (PieceAlreadySoldException e)
         {
@@ -122,7 +96,7 @@ public class SalesController : ControllerBase
         }
     }
 
-    private async Task<ActionResult<SaleSpecification>> TryToSellPieces(CreateSaleSpecification sale, List<Piece> pieces)
+    private async Task<ActionResult<SaleSpecification>> TryCreateSale(CreateSaleSpecification sale, List<Piece> pieces)
     {
         var newSale = await _salesServices.SellPieces(sale, pieces);
         return CreatedAtAction(nameof(GetSale), new { id = newSale.Id }, new SaleSpecification
@@ -142,6 +116,35 @@ public class SalesController : ControllerBase
             )
                 .ToArray()
         });
+    }
+
+    private IEnumerable<SaleSpecification> SalesToSaleSpecifications(IEnumerable<Sale> sales)
+    {
+        return (IEnumerable<SaleSpecification>)sales.Select(
+            s => SaleToSaleSpecification(s)
+        )
+            .ToList();
+    }
+
+    private SaleSpecification SaleToSaleSpecification(Sale sale)
+    {
+        return new SaleSpecification
+        {
+            Id = sale.Id,
+            Price = sale.Price,
+            Date = sale.Date,
+            PiecesSold = sale.Pieces.Select(
+                p =>
+                    new PieceSpecification
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Type = p.Type,
+                        UserId = p.UserId
+                    }
+            )
+                .ToArray()
+        };
     }
 
     private bool SaleExists(long id)
