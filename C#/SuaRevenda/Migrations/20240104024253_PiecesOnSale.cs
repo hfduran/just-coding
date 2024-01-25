@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SuaRevenda.Migrations
 {
     /// <inheritdoc />
-    public partial class AddMigrationGood : Migration
+    public partial class PiecesOnSale : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -82,23 +82,23 @@ namespace SuaRevenda.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sale",
+                name: "Sales",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Price = table.Column<double>(type: "double precision", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sale", x => x.Id);
+                    table.PrimaryKey("PK_Sales", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Sale_Users_UserId",
+                        name: "FK_Sales_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -111,7 +111,6 @@ namespace SuaRevenda.Migrations
                     Type = table.Column<string>(type: "text", nullable: true),
                     OriginId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    Discriminator = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
                     SaleId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
@@ -124,11 +123,10 @@ namespace SuaRevenda.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Pieces_Sale_SaleId",
+                        name: "FK_Pieces_Sales_SaleId",
                         column: x => x.SaleId,
-                        principalTable: "Sale",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalTable: "Sales",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Pieces_Users_UserId",
                         column: x => x.UserId,
@@ -165,8 +163,8 @@ namespace SuaRevenda.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sale_UserId",
-                table: "Sale",
+                name: "IX_Sales_UserId",
+                table: "Sales",
                 column: "UserId");
         }
 
@@ -186,7 +184,7 @@ namespace SuaRevenda.Migrations
                 name: "Origins");
 
             migrationBuilder.DropTable(
-                name: "Sale");
+                name: "Sales");
 
             migrationBuilder.DropTable(
                 name: "Users");

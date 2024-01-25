@@ -12,8 +12,8 @@ using SuaRevenda.Data;
 namespace SuaRevenda.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240101132818_AddMigrationGood")]
-    partial class AddMigrationGood
+    [Migration("20240104024253_PiecesOnSale")]
+    partial class PiecesOnSale
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,16 +86,14 @@ namespace SuaRevenda.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("OriginId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("SaleId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Type")
@@ -108,13 +106,11 @@ namespace SuaRevenda.Migrations
 
                     b.HasIndex("OriginId");
 
+                    b.HasIndex("SaleId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Pieces");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Piece");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.Sale", b =>
@@ -125,17 +121,20 @@ namespace SuaRevenda.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double>("Price")
                         .HasColumnType("double precision");
 
-                    b.Property<long>("UserId")
+                    b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Sale");
+                    b.ToTable("Sales");
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.Supplier", b =>
@@ -193,18 +192,6 @@ namespace SuaRevenda.Migrations
                     b.HasDiscriminator().HasValue("Purchase");
                 });
 
-            modelBuilder.Entity("SuaRevenda.Models.PieceSold", b =>
-                {
-                    b.HasBaseType("SuaRevenda.Models.Piece");
-
-                    b.Property<long>("SaleId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("SaleId");
-
-                    b.HasDiscriminator().HasValue("PieceSold");
-                });
-
             modelBuilder.Entity("SuaRevenda.Models.CommissionTable", b =>
                 {
                     b.HasOne("SuaRevenda.Models.Consigned", "Consigned")
@@ -232,6 +219,10 @@ namespace SuaRevenda.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SuaRevenda.Models.Sale", "Sale")
+                        .WithMany("Pieces")
+                        .HasForeignKey("SaleId");
+
                     b.HasOne("SuaRevenda.Models.User", "User")
                         .WithMany("Pieces")
                         .HasForeignKey("UserId")
@@ -240,29 +231,16 @@ namespace SuaRevenda.Migrations
 
                     b.Navigation("Origin");
 
+                    b.Navigation("Sale");
+
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.Sale", b =>
                 {
-                    b.HasOne("SuaRevenda.Models.User", "User")
+                    b.HasOne("SuaRevenda.Models.User", null)
                         .WithMany("Sales")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SuaRevenda.Models.PieceSold", b =>
-                {
-                    b.HasOne("SuaRevenda.Models.Sale", "Sale")
-                        .WithMany("PiecesSold")
-                        .HasForeignKey("SaleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Sale");
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.Origin", b =>
@@ -272,7 +250,7 @@ namespace SuaRevenda.Migrations
 
             modelBuilder.Entity("SuaRevenda.Models.Sale", b =>
                 {
-                    b.Navigation("PiecesSold");
+                    b.Navigation("Pieces");
                 });
 
             modelBuilder.Entity("SuaRevenda.Models.Supplier", b =>

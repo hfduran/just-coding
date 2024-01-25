@@ -1,10 +1,8 @@
-namespace SuaRevenda.Models;
+namespace SuaRevenda.ResourceModels;
 
-public class Sale
+public class SaleUpdateSpecification
 {
     public long Id { get; set; }
     public double Price { get; set; }
     public DateTime Date { get; set; }
-
-    public ICollection<Piece> Pieces { get; set; } = null!;
 }
