@@ -48,14 +48,14 @@ public class SalesServices
         return sale;
     }
 
-    public async Task<Sale> SellPieces(CreateSaleSpecification sale, List<Piece> pieces)
+    public async Task<Sale> SellPieces(CreateSaleSpecification saleSpec, List<Piece> pieces)
     {
         ValidatePiecesToSell(pieces);
 
         var newSale = new Sale
         {
-            Price = sale.Price,
-            Date = sale.Date,
+            Price = saleSpec.Price,
+            Date = saleSpec.Date,
             Pieces = pieces
         };
 
@@ -63,6 +63,15 @@ public class SalesServices
         await _context.SaveChangesAsync();
 
         return newSale;
+    }
+
+    public async Task<Sale> EditSale(SaleUpdateSpecification saleSpec)
+    {
+        var sale = await GetSale(saleSpec.Id);
+        sale.Price = saleSpec.Price;
+        sale.Date = saleSpec.Date;
+        await _context.SaveChangesAsync();
+        return sale;
     }
 
     private void ValidatePiecesToSell(List<Piece> pieces)

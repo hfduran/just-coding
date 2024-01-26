@@ -24,7 +24,8 @@ public class SalesController : ControllerBase
     public async Task<ActionResult<IEnumerable<SaleSpecification>>> GetSales()
     {
         var sales = await _salesServices.GetSales();
-        return sales.Select(s => s.ToSaleSpecification()).ToList();
+        var salesSpecs = sales.Select(s => s.ToSaleSpecification()).ToList();
+        return Ok(salesSpecs);
     }
 
     [HttpGet("{id}")]
@@ -33,7 +34,7 @@ public class SalesController : ControllerBase
         try
         {
             var sale = await TryGetSale(id);
-            return sale;
+            return Ok(sale);
         }
         catch (NoSuchSaleException e)
         {
@@ -41,7 +42,7 @@ public class SalesController : ControllerBase
         }
     }
 
-    private async Task<ActionResult<SaleSpecification>> TryGetSale(long id)
+    private async Task<SaleSpecification> TryGetSale(long id)
     {
         var sale = await _salesServices.GetSale(id);
         SaleSpecification spec = sale.ToSaleSpecification();
@@ -49,35 +50,25 @@ public class SalesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutSale(long id, SaleUpdateSpecification sale)
+    public async Task<IActionResult> PutSale(long id, SaleUpdateSpecification saleSpec)
     {
-        if (id != sale.Id)
+        if (id != saleSpec.Id)
         {
-            return BadRequest();
+            return BadRequest("Id specified in the URL does not match the one in the body");
         }
-        var saleToUpdate = await _context.Sales.FindAsync(id);
-        if (saleToUpdate == null)
-        {
-            return NotFound();
-        }
-        saleToUpdate.Price = sale.Price;
-        saleToUpdate.Date = sale.Date;
         try
         {
-            await _context.SaveChangesAsync();
+            return Ok(await TryEditSale(saleSpec));
         }
-        catch (DbUpdateConcurrencyException)
+        catch (NoSuchSaleException e)
         {
-            if (!SaleExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound(e.Message);
         }
-        return NoContent();
+    }
+
+    private async Task<Sale> TryEditSale(SaleUpdateSpecification saleSpec)
+    {
+        return await _salesServices.EditSale(saleSpec);
     }
 
     [HttpPost]
