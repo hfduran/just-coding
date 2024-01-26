@@ -24,7 +24,7 @@ public class SalesController : ControllerBase
     public async Task<ActionResult<IEnumerable<SaleSpecification>>> GetSales()
     {
         var sales = await _salesServices.GetSales();
-        return SalesToSaleSpecifications(sales).ToList();
+        return sales.Select(s => s.ToSaleSpecification()).ToList();
     }
 
     [HttpGet("{id}")]
@@ -44,7 +44,7 @@ public class SalesController : ControllerBase
     private async Task<ActionResult<SaleSpecification>> TryGetSale(long id)
     {
         var sale = await _salesServices.GetSale(id);
-        SaleSpecification spec = SaleToSaleSpecification(sale);
+        SaleSpecification spec = sale.ToSaleSpecification();
         return spec;
     }
 
@@ -83,12 +83,9 @@ public class SalesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SaleSpecification>> PostSale(CreateSaleSpecification sale)
     {
-        long[] piecesInSale = sale.PiecesIds.Select(p => p.Id).ToArray();
-        List<Piece> pieces = await _context.Pieces.Where(p => piecesInSale.Contains(p.Id)).ToListAsync();
-
         try
         {
-            return await TryCreateSale(sale, pieces);
+            return await TryCreateSale(sale);
         }
         catch (PieceAlreadySoldException e)
         {
@@ -96,55 +93,12 @@ public class SalesController : ControllerBase
         }
     }
 
-    private async Task<ActionResult<SaleSpecification>> TryCreateSale(CreateSaleSpecification sale, List<Piece> pieces)
+    private async Task<ActionResult<SaleSpecification>> TryCreateSale(CreateSaleSpecification sale)
     {
+        long[] piecesInSale = sale.PiecesIds.Select(p => p.Id).ToArray();
+        List<Piece> pieces = await _context.Pieces.Where(p => piecesInSale.Contains(p.Id)).ToListAsync();
         var newSale = await _salesServices.SellPieces(sale, pieces);
-        return CreatedAtAction(nameof(GetSale), new { id = newSale.Id }, new SaleSpecification
-        {
-            Id = newSale.Id,
-            Price = newSale.Price,
-            Date = newSale.Date,
-            PiecesSold = newSale.Pieces.Select(
-                p =>
-                    new PieceSpecification
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Type = p.Type,
-                        UserId = p.UserId
-                    }
-            )
-                .ToArray()
-        });
-    }
-
-    private IEnumerable<SaleSpecification> SalesToSaleSpecifications(IEnumerable<Sale> sales)
-    {
-        return (IEnumerable<SaleSpecification>)sales.Select(
-            s => SaleToSaleSpecification(s)
-        )
-            .ToList();
-    }
-
-    private SaleSpecification SaleToSaleSpecification(Sale sale)
-    {
-        return new SaleSpecification
-        {
-            Id = sale.Id,
-            Price = sale.Price,
-            Date = sale.Date,
-            PiecesSold = sale.Pieces.Select(
-                p =>
-                    new PieceSpecification
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Type = p.Type,
-                        UserId = p.UserId
-                    }
-            )
-                .ToArray()
-        };
+        return CreatedAtAction(nameof(GetSale), new { id = newSale.Id }, newSale.ToSaleSpecification());
     }
 
     private bool SaleExists(long id)

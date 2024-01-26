@@ -1,3 +1,4 @@
+using SuaRevenda.ResourceModels;
 namespace SuaRevenda.Models;
 
 public class Sale
@@ -7,4 +8,15 @@ public class Sale
     public DateTime Date { get; set; }
 
     public ICollection<Piece> Pieces { get; set; } = null!;
+
+    public SaleSpecification ToSaleSpecification()
+    {
+        return new SaleSpecification
+        {
+            Id = Id,
+            Price = Price,
+            Date = Date,
+            PiecesSold = Pieces.Select(p => p.ToPieceSpecification()).ToArray()
+        };
+    }
 }
