@@ -48,8 +48,11 @@ public class SalesServices
         return sale;
     }
 
-    public async Task<Sale> SellPieces(CreateSaleSpecification saleSpec, List<Piece> pieces)
+    public async Task<Sale> SellPieces(CreateSaleSpecification saleSpec)
     {
+        long[] piecesInSale = saleSpec.PiecesIds.Select(p => p.Id).ToArray();
+        List<Piece> pieces = await _context.Pieces.Where(p => piecesInSale.Contains(p.Id)).ToListAsync();
+
         ValidatePiecesToSell(pieces);
 
         var newSale = new Sale

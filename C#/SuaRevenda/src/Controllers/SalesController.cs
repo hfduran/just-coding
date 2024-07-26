@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SuaRevenda.Services;
 using SuaRevenda.Data;
 using SuaRevenda.Models;
@@ -11,12 +10,10 @@ namespace SuaRevenda.Controllers;
 [ApiController]
 public class SalesController : ControllerBase
 {
-    private readonly DataContext _context;
     private readonly SalesServices _salesServices;
 
     public SalesController(DataContext context)
     {
-        _context = context;
         _salesServices = new SalesServices(context);
     }
 
@@ -84,17 +81,10 @@ public class SalesController : ControllerBase
         }
     }
 
-    private async Task<ActionResult<SaleSpecification>> TryCreateSale(CreateSaleSpecification sale)
+    private async Task<ActionResult<SaleSpecification>> TryCreateSale(CreateSaleSpecification saleSpec)
     {
-        long[] piecesInSale = sale.PiecesIds.Select(p => p.Id).ToArray();
-        List<Piece> pieces = await _context.Pieces.Where(p => piecesInSale.Contains(p.Id)).ToListAsync();
-        var newSale = await _salesServices.SellPieces(sale, pieces);
+        var newSale = await _salesServices.SellPieces(saleSpec);
         return CreatedAtAction(nameof(GetSale), new { id = newSale.Id }, newSale.ToSaleSpecification());
-    }
-
-    private bool SaleExists(long id)
-    {
-        return _context.Sales.Any(e => e.Id == id);
     }
 }
 
