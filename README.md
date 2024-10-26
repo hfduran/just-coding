@@ -1,3 +1,3 @@
-# POO
+# Just Coding!
 
-For studies involving POO and other types of improving the code quality
+Repository dedicated for some quick studies about programming!
